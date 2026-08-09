@@ -17,13 +17,16 @@
 const NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 
 const NVIDIA_FREE_MODELS = [
-  "minimaxai/minimax-m2.7",
+  // "minimaxai/minimax-m2.7",
   "minimaxai/minimax-m3",
   "z-ai/glm-5.2",
-  "deepseek-ai/deepseek-v4-pro",
-  "deepseek-ai/deepseek-v4-flash",
-  "moonshotai/kimi-k2.6",
+  // "deepseek-ai/deepseek-v4-pro",
+  // "deepseek-ai/deepseek-v4-flash",
+  // "moonshotai/kimi-k2.6",
   "nemotron-3-ultra-550b-a55b",
+  "nvidia/nemotron-3-super-120b-a12b",
+  "stepfun-ai/step-3.7-flash",
+  "google/gemma-4-31b-it",
 ];
 
 const DEFAULT_MODEL = NVIDIA_FREE_MODELS[0];
@@ -251,30 +254,31 @@ function buildRequestPayload(modelId, message) {
   switch (modelId) {
     case "z-ai/glm-5.2":
       return {
-        stream: false, // Disabled streaming to avoid known NIM stalls for GLM-5.2
+        stream: true, // Disabled streaming to avoid known NIM stalls for GLM-5.2
         body: {
           model: apiId,
           messages,
           temperature: 1,
           top_p: 1,
-          max_tokens: 8192, // Reduced to avoid context/token limit errors on Free tier
-          stream: false,
-        },
-      };
-
-    case "moonshotai/kimi-k2.6":
-      return {
-        stream: true,
-        body: {
-          model: apiId,
-          messages,
-          chat_template_kwargs: { enable_thinking: true },
-          max_tokens: 4096,
-          temperature: 1,
-          top_p: 0.95,
+          seed:42,
+          max_tokens: 16384, // Reduced to avoid context/token limit errors on Free tier
           stream: true,
         },
       };
+
+    // case "moonshotai/kimi-k2.6":
+    //   return {
+    //     stream: true,
+    //     body: {
+    //       model: apiId,
+    //       messages,
+    //       chat_template_kwargs: { enable_thinking: true },
+    //       max_tokens: 4096,
+    //       temperature: 1,
+    //       top_p: 0.95,
+    //       stream: true,
+    //     },
+    //   };
 
     case "nemotron-3-ultra-550b-a55b":
       return {
@@ -284,14 +288,27 @@ function buildRequestPayload(modelId, message) {
           messages,
           temperature: 1,
           top_p: 0.95,
-          max_tokens: 8192,
-          reasoning_budget: 8192,
-          chat_template_kwargs: { enable_thinking: true },
+    max_tokens: 16384,
+    reasoning_budget: 16384,
+    chat_template_kwargs: {"enable_thinking":true},
           stream: true,
         },
       };
 
-    case "deepseek-ai/deepseek-v4-flash":
+    // case "deepseek-ai/deepseek-v4-flash":
+    //   return {
+    //     stream: false,
+    //     body: {
+    //       model: apiId,
+    //       messages,
+    //       temperature: 1,
+    //       top_p: 0.95,
+    //       max_tokens: 8192,
+    //       chat_template_kwargs: { thinking: true, reasoning_effort: "high" },
+    //       stream: false,
+    //     },
+    //   };
+    case "minimaxai/minimax-m3":
       return {
         stream: false,
         body: {
@@ -300,11 +317,51 @@ function buildRequestPayload(modelId, message) {
           temperature: 1,
           top_p: 0.95,
           max_tokens: 8192,
-          chat_template_kwargs: { thinking: true, reasoning_effort: "high" },
+          // chat_template_kwargs: { thinking: true, reasoning_effort: "high" },
           stream: false,
         },
       };
+          case "google/gemma-4-31b-it":
+      return {
+        stream: false,
+        body: {
+          model: apiId,
+          messages,
+         "max_tokens":16384,
+         "temperature":1,
+         "top_p":0.95
+          ,chat_template_kwargs: { thinking: true },
 
+          stream: false,
+        },
+      };
+          case "stepfun-ai/step-3.7-flash":
+      return {
+        stream: false,
+        body: {
+          model: apiId,
+          messages,
+          temperature: 1,
+          top_p: 0.95,
+          max_tokens: 16384,
+          seed:42,
+          // chat_template_kwargs: { thinking: true },
+          stream: false,
+        },
+      };
+          case "minimaxai/minimax-m3":
+      return {
+        stream: false,
+        body: {
+          model: apiId,
+          messages,
+          temperature: 1,
+          top_p: 0.95,
+          max_tokens: 8192,
+          // chat_template_kwargs: { thinking: true, reasoning_effort: "high" },
+          stream: false,
+        },
+      };
     default:
       return {
         stream: false,
